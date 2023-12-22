@@ -1,16 +1,3 @@
-
-install.packages('tidymodels', repos="https://cran.rstudio.com/")
-install.packages('vip', repos="https://cran.rstudio.com/")
-install.packages(c('performance', 'PostcodesioR'), repos="https://cran.rstudio.com/")
-install.packages(c('tidyxl', 'unpivotr'), repos="https://cran.rstudio.com/")
-
-install.packages(c('DT','miniUI','shiny','shinycssloaders'), repos="https://cran.rstudio.com/")
-remotes::install_github('rOpenSci/fingertipsR',
-                        build_vignettes = TRUE,
-                        build = FALSE,
-                        dependencies = TRUE)
-
-
 library(httr)
 library(XML)
 library(dplyr)
