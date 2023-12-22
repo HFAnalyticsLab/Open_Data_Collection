@@ -71,8 +71,6 @@ quarterly_overnight_beds <- quarterly_overnight_beds %>%
   rename(overnight_bed_occupancy = numerator, overnight_bed_capacity = denominator) %>% 
   select(-metric,-frequency)
 
-
-
 # Day only
 url <- "https://www.england.nhs.uk/statistics/statistical-work-areas/bed-availability-and-occupancy/bed-data-day-only/"
 excel_urls <- obtain_links(url)
@@ -146,7 +144,6 @@ quarterly_day_beds <- quarterly_day_beds %>%
 
 
 bed_output <- left_join(quarterly_overnight_beds,quarterly_day_beds, by =c('year', 'quarter', 'org'))
-
 
 ##################################################
 ##################################################
@@ -306,41 +303,6 @@ quarterly_sickness_absence <- monthly_to_quarterly_mean(
   monthly_sickness_absence
 )
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ##################################################
 
 # NHS workforce per population
@@ -390,8 +352,6 @@ annual_workforce_fte <- unzip_file(
     "Staff.Group",
     numerator = "Total"
   )
-
-
 
 # collecting the denominator (populations by health areas)
 url <- "https://digital.nhs.uk/data-and-information/publications/statistical/patients-registered-at-a-gp-practice"
