@@ -3,8 +3,9 @@
 # December 2023
 
 
-
-# Capacity data sources ---------------------------------------------------
+########################################################################
+# Capacity data sources -----------------------------------------------
+########################################################################
 
 ## Hospital beds
 # Overnight
@@ -312,24 +313,14 @@ quarterly_sickness_absence <- monthly_to_quarterly_mean(
   filter(metric=='ESR absence (acute organisation type)') %>% 
   select(-frequency,-metric)
 
-# annual_sickness_absence <- monthly_to_annual_mean(
-#   monthly_sickness_absence,
-#   year_type = "financial"
-# )
-# 
-# sickness_absence <- bind_rows(
-#   monthly_sickness_absence,
-#   quarterly_sickness_absence,
-#   annual_sickness_absence
-# ) 
 
 ########################################################################
 # Covid Occupancy  ---------------------------------------------------
 ########################################################################
 
-occ_beds <- read_excel('/home/andrew.mooney@tier0/Covid_Occupancy.xlsx', sheet='Occupied_Beds_Quarter') %>% 
+occ_beds <- read_excel('Covid_Occupancy.xlsx', sheet='Occupied_Beds_Quarter') %>% 
   select(-'NHS England Region',-Name)
-covid_beds <- read_excel('/home/andrew.mooney@tier0/Covid_Occupancy.xlsx', sheet='Covid_Beds_Quarter') %>% 
+covid_beds <- read_excel('Covid_Occupancy.xlsx', sheet='Covid_Beds_Quarter') %>% 
   select(-'NHS England Region',-Name)
 
 
@@ -501,25 +492,6 @@ output <- left_join(output, covid_occupancy, by=c('year', 'quarter', 'org'))
 output <- left_join(output, quarterly_rtt, by=c('year', 'quarter', 'org'))
 
 
-##########
-#Test correlations for 2022.
-
-data_2022 <- output %>% 
-  filter(year==2022)
-
-test3 <- data_2022 %>% 
-  select(overnight_occupancy_rate,day_occupancy_rate,sickness_rate,covid_occupancy_rate,admitted_18plus_weeks,non_admitted_18plus_weeks,
-         workforce_per_1000_pop,doctors_per_1000_pop,nurses_per_1000_pop,ambulance_staff_per_1000_pop,
-         technical_staff_per_1000_pop,senior_doctors_proportion_of_doctors,managers_proportion_of_total_staff)
-
-library(corrplot)
-correlation_matrix <- cor(test3)
-corrplot(correlation_matrix,method='color', addCoef.col = 'black')
-
-cor(test3$managers_proportion_of_total_staff,test3$sickness_rate)
-
-ggplot(test3, aes(x = managers_proportion_of_total_staff, y = sickness_rate)) +
-  geom_point(color = "blue")
 
 ########################################################################
 # NHS Workforce per population  -------------------------------------
@@ -811,9 +783,9 @@ output <- left_join(output, quarterly_workforce_stats, by=c('year', 'quarter', '
 
 
 
-
-#RTT Data.
-
+########################################################################
+#RTT Data Comparing to Baseline --------------------------------------
+########################################################################
 rtt_data_month <- s3read_using(fread,
                                object = 'RTT waiting times data/RTT_allmonths_new.csv', # File to open
                                bucket = 'thf-dap-tier0-projects-iht-067208b7-projectbucket-1mrmynh0q7ljp') # Bucket name defined above
@@ -917,69 +889,3 @@ quarterly_rtt_dataset_pivot <- left_join(quarterly_rtt_dataset_pivot,baseline_rt
 output <- left_join(output, quarterly_rtt_dataset_pivot, by=c('year', 'quarter', 'org')) %>% 
   select(-admitted_18plus_weeks,-non_admitted_18plus_weeks)
 
-
-
-
-
-# last_month_in_quarter <- c('Mar','Jun','Sep','Dec')
-# 
-# quarterly_rtt_dataset_last_month <- rtt_dataset %>% 
-#   mutate(weeks_0_18 = ifelse(!(month %in% last_month_in_quarter),NA,weeks_0_18),
-#          weeks_18_52 = ifelse(!(month %in% last_month_in_quarter),NA,weeks_18_52),
-#          weeks_52_104 = ifelse(!(month %in% last_month_in_quarter),NA,weeks_52_104),
-#          weeks_104_plus = ifelse(!(month %in% last_month_in_quarter),NA,weeks_104_plus),
-#          Total = ifelse(!(month %in% last_month_in_quarter),NA,Total),
-#          Total.All = ifelse(!(month %in% last_month_in_quarter),NA,Total.All),
-#   ) %>% 
-#   group_by(year,quarter,Provider.Org.Code,RTT.Part.Description) %>% 
-#   summarise(weeks_0_18 = sum(weeks_0_18, na.rm = TRUE),
-#             weeks_18_52 = sum(weeks_18_52, na.rm = TRUE),
-#             weeks_52_104 = sum(weeks_52_104, na.rm = TRUE),
-#             weeks_104_plus = sum(weeks_104_plus, na.rm = TRUE), 
-#             Total = sum(Total, na.rm = TRUE), 
-#             Total.All = sum(Total.All, na.rm = TRUE)) %>% 
-#   ungroup() %>% 
-#   rename(org=Provider.Org.Code)
-# 
-# orgs <- quarterly_rtt_dataset_last_month %>% 
-#   pull(org) %>% 
-#   unique()
-# 
-# org_lkp <- attach_icb_to_org(orgs) %>% 
-#   mutate(
-#     divisor = n(),
-#     .by = health_org_code
-#   )
-# 
-# quarterly_rtt_dataset_v2 <- quarterly_rtt_dataset_last_month %>% 
-#   left_join(
-#     org_lkp,
-#     by = join_by(
-#       org == health_org_code
-#     ),
-#     relationship = "many-to-many"
-#   ) %>% 
-#   summarise(
-#     across(
-#       c(weeks_0_18, weeks_18_52, weeks_52_104, weeks_104_plus, Total, Total.All),
-#       ~ sum(.x / divisor, na.rm = TRUE) # some health_orgs attributed to multiple icbs, so these are split equally between the icbs
-#     ),
-#     .by = c(year, quarter, icb_code, RTT.Part.Description)
-#   ) %>% 
-#   rename(
-#     org = icb_code
-#   )
-# 
-# 
-# quarterly_rtt_dataset_v2_pivot <- quarterly_rtt_dataset_v2 %>% 
-#   pivot_wider(
-#     id_cols = c(year, quarter, org),
-#     names_from = RTT.Part.Description,
-#     values_from = c(weeks_0_18, weeks_18_52, weeks_52_104, weeks_104_plus, Total, Total.All),
-#     names_sep = "_"
-#   )
-# 
-# 
-# output_v2 <- left_join(output, quarterly_rtt_dataset_v2_pivot, by=c('year', 'quarter', 'org'))
-# 
-# 
